@@ -33,6 +33,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/persist/cog-storage/CogStorage.h>
 #include "../TestCogServer.h"
 
@@ -125,7 +126,7 @@ void QueryPersistUTest::setup_data(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Populate the Storage with stuff that we will later query. */
@@ -161,7 +162,7 @@ void QueryPersistUTest::setup_data(void)
 	/* Push all atoms out to the server */
 	store->store_atomspace();
 	store->barrier();
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 }
 
 void QueryPersistUTest::test_meet(void)
@@ -173,7 +174,7 @@ void QueryPersistUTest::test_meet(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Create a query to find all things that have wheels.
@@ -224,7 +225,7 @@ void QueryPersistUTest::test_meet(void)
 	HandleSet htoo = lvp->to_handle_set();
 	TSM_ASSERT("Expect same results as before", hset == htoo);
 
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
@@ -237,7 +238,7 @@ void QueryPersistUTest::test_join(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Create a join to find all vehicles.
@@ -274,7 +275,7 @@ void QueryPersistUTest::test_join(void)
 
 	TSM_ASSERT_EQUALS("Expecting airplane, bicycle and car", hset, expect);
 
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 

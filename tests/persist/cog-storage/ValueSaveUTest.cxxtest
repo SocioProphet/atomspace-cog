@@ -36,6 +36,7 @@
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
 #include <opencog/atoms/value/StringValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include "../TestCogServer.h"
 
 #include <opencog/persist/cog-storage/CogStorage.h>
@@ -108,7 +109,7 @@ void ValueSaveUTest::test_single_atom_save()
 	AtomSpacePtr as = createAtomSpace();
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	Handle key = as->add_node(PREDICATE_NODE, "some pred key");
@@ -154,6 +155,7 @@ void ValueSaveUTest::test_single_atom_save()
 	store->store_atom(atom);
 	store->barrier();
 
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	as = nullptr;
 
 	logger().info("END TEST: %s", __FUNCTION__);
@@ -174,7 +176,7 @@ void ValueSaveUTest::check_one(ValuePtr pap, bool fetchkey)
 	AtomSpacePtr as = createAtomSpace();
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	Handle key = store->fetch_atom(bkey);
@@ -197,7 +199,7 @@ void ValueSaveUTest::check_one(ValuePtr pap, bool fetchkey)
 	as = createAtomSpace();
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Storage uses a different code path if the key is not yet
@@ -222,7 +224,7 @@ void ValueSaveUTest::test_save_restore(bool fkey)
 	AtomSpacePtr as = createAtomSpace();
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	Handle key = as->add_node(PREDICATE_NODE, "some pred key");
@@ -278,7 +280,7 @@ void ValueSaveUTest::test_load_by_type()
 	AtomSpacePtr as = createAtomSpace();
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Clear out left-over junk, just in case.
@@ -339,7 +341,7 @@ void ValueSaveUTest::test_load_by_type()
 	as = createAtomSpace();
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// --------------------
@@ -347,12 +349,13 @@ void ValueSaveUTest::test_load_by_type()
 	store->fetch_all_atoms_of_type(CONCEPT_NODE);
 	store->barrier();
 
-	// Seven: 4 ConceptNodes, the PredicateNode "*-TruthValueKey-*",
-	// PredicateNode "some pred key", and PredicateNode "*-IsKeyFlag-*"
+	// Nine: 4 ConceptNodes, the PredicateNode "*-TruthValueKey-*",
+	// PredicateNode "some pred key", PredicateNode "*-IsKeyFlag-*",
+	// the CogStorageNode, and PredicateNode "*-open-*"
 	// -- the preds show up when the attached values are fetched.
-	printf ("fetched %lu atoms, expecting 8\n", as->get_size());
+	printf ("fetched %lu atoms, expecting 9\n", as->get_size());
 	// printf("contents=%s\n", as->to_string().c_str());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 8);
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 9);
 
 	Handle gkey = as->add_node(PREDICATE_NODE, "some pred key");
 	Handle gaf = as->add_node(CONCEPT_NODE, "float node");
@@ -407,7 +410,7 @@ void ValueSaveUTest::test_link_by_type()
 	AtomSpacePtr as = createAtomSpace();
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	Handle key = as->add_node(PREDICATE_NODE, "some pred key");
@@ -494,7 +497,7 @@ void ValueSaveUTest::test_link_by_type()
 	as = createAtomSpace();
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// --------------------
@@ -510,12 +513,12 @@ void ValueSaveUTest::test_link_by_type()
 	// The B-nodes are added after the fetch. In either case,
 	// there should not be any values fetched for either A or B;
 	// only the values on the C-links should be fetched.
-	// +1 for (PredicateNode "*-IsKeyFlag-*")
+	// +1 for (PredicateNode "*-IsKeyFlag-*"), +1 for *-open-*
 	store->fetch_all_atoms_of_type(LIST_LINK);
 	store->barrier();
-	printf ("fetched %lu atoms, expecting 16\n", as->get_size());
+	printf ("fetched %lu atoms, expecting 17\n", as->get_size());
 	// printf("contents=%s\n", as->to_string().c_str());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 16);
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 17);
 
 	Handle gbf = as->add_node(CONCEPT_NODE, "b float node");
 	Handle gbt = as->add_node(CONCEPT_NODE, "b string node");
@@ -616,7 +619,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	AtomSpacePtr as = createAtomSpace();
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	Handle key = as->add_node(PREDICATE_NODE, "some (\"pred\"))) key");
@@ -703,7 +706,7 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	as = createAtomSpace();
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// --------------------
@@ -722,10 +725,10 @@ void ValueSaveUTest::test_link_by_type_quoted()
 	store->fetch_all_atoms_of_type(LIST_LINK);
 	store->barrier();
 
-	// We created 9 new atoms above, so expect 16 from before plus 9
-	// (+1 for *-IsKeyFlag-*)
-	printf ("fetched %lu atoms, expecting 25\n", as->get_size());
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 25);
+	// We created 9 new atoms above, so expect 17 from before plus 9
+	// (+1 for *-IsKeyFlag-*, +1 for *-open-*)
+	printf ("fetched %lu atoms, expecting 26\n", as->get_size());
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 26);
 
 	Handle gbf = as->add_node(CONCEPT_NODE, "b float node");
 	Handle gbt = as->add_node(CONCEPT_NODE, "b string node");
@@ -829,7 +832,7 @@ void ValueSaveUTest::test_incoming()
 	AtomSpacePtr as = createAtomSpace();
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	Handle key = as->add_node(PREDICATE_NODE, "some pred key");
@@ -916,7 +919,7 @@ void ValueSaveUTest::test_incoming()
 	as = createAtomSpace();
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// --------------------
@@ -937,8 +940,8 @@ void ValueSaveUTest::test_incoming()
 	store->fetch_incoming_set(gal, false);
 	store->fetch_incoming_set(gav, false);
 	store->barrier();
-	// +1 for *-IsKeyFlag-*
-	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 16);
+	// +1 for *-IsKeyFlag-*, +1 for *-open-*
+	TSM_ASSERT("Wrong number of Atoms fetched!", as->get_size() == 17);
 
 	Handle gbf = as->add_node(CONCEPT_NODE, "b float node");
 	Handle gbt = as->add_node(CONCEPT_NODE, "b string node");

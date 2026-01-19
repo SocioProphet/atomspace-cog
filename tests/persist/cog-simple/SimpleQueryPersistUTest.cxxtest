@@ -33,6 +33,7 @@
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/persist/cog-simple/CogSimpleStorage.h>
 
 #include <opencog/util/Logger.h>
@@ -123,7 +124,7 @@ void SimpleQueryPersistUTest::setup_data(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Populate the Storage with stuff that we will later query. */
@@ -170,7 +171,7 @@ void SimpleQueryPersistUTest::test_meet(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Create a query to find all things that have wheels.
@@ -221,7 +222,7 @@ void SimpleQueryPersistUTest::test_meet(void)
 	HandleSet htoo = lvp->to_handle_set();
 	TSM_ASSERT("Expect same results as before", hset == htoo);
 
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	logger().info("END TEST: %s", __FUNCTION__);
 }
@@ -235,7 +236,7 @@ void SimpleQueryPersistUTest::test_join(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Create a join to find all vehicles.
@@ -272,7 +273,7 @@ void SimpleQueryPersistUTest::test_join(void)
 
 	TSM_ASSERT_EQUALS("Expecting airplane, bicycle and car", hset, expect);
 
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	logger().info("END TEST: %s", __FUNCTION__);
 }

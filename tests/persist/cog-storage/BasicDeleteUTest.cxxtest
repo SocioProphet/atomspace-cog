@@ -33,6 +33,7 @@
 #include <opencog/persist/cog-types/atom_types.h>
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include "../TestCogServer.h"
 
@@ -92,8 +93,8 @@ void BasicDeleteUTest::tearDown(void)
 }
 
 // 9 more from CogServerNode and gorp; 2 for *-TruthValueKey-* and
-// *-IsKeyFlag-*
-int basic_offset = 9 + 2;
+// *-IsKeyFlag-*; 1 more for *-open-*
+int basic_offset = 9 + 3;
 
 // ============================================================
 
@@ -106,7 +107,7 @@ void BasicDeleteUTest::test_duplicates(void)
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Clear out left-over junk, just in case.
@@ -120,23 +121,24 @@ void BasicDeleteUTest::test_duplicates(void)
 	store->store_atom(li);
 	store->barrier();
 
-	// Verify the atomspace size
-	TS_ASSERT_EQUALS(as->get_size(), 4);
+	// Verify the atomspace size (+1 for *-open-* predicate)
+	TS_ASSERT_EQUALS(as->get_size(), 5);
 
 	// Remove the link. Since the link has duplicate atoms
 	// in it, this can cause trouble, depending on how the
 	// incoming set is managed.
 	store->remove_atom(as, li);
-	TS_ASSERT_EQUALS(as->get_size(), 4);
-	store->close();
+	TS_ASSERT_EQUALS(as->get_size(), 5);
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	as->extract_atom(li);
-	TS_ASSERT_EQUALS(as->get_size(), 3);
-	store->open();
+	TS_ASSERT_EQUALS(as->get_size(), 5);
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 3 + basic_offset);
+	// +1 for *-close-* predicate from above
+	TS_ASSERT_EQUALS(as->get_size(), 4 + basic_offset);
 
 	::kill_data(store.get(), _test_asp.get());
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
@@ -152,7 +154,7 @@ void BasicDeleteUTest::test_recursive(void)
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Clear out left-over junk, just in case.
@@ -173,8 +175,8 @@ void BasicDeleteUTest::test_recursive(void)
 	for (const Handle& h : hset)
 		printf("Atomspace contains: %s\n", h->to_short_string().c_str());
 
-	// Verify the atomspace size
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	// Verify the atomspace size (+1 for *-open-* predicate)
+	TS_ASSERT_EQUALS(as->get_size(), 6);
 
 	// Remove (Concept "a"). Since this appears twice, recursion
 	// will hit it twice, in stange ways, and maybe crash.
@@ -186,11 +188,12 @@ void BasicDeleteUTest::test_recursive(void)
 	for (const Handle& h : hset)
 		printf("Post delete: %s\n", h->to_short_string().c_str());
 
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	as->extract_atom(ha, true);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 2 + basic_offset);
+	// +1 for *-close-* predicate from above
+	TS_ASSERT_EQUALS(as->get_size(), 3 + basic_offset);
 
 	// --------------------------------------
 	// Do it again, but with a different order.
@@ -200,17 +203,19 @@ void BasicDeleteUTest::test_recursive(void)
 
 	store->store_atom(lj);
 	store->barrier();
-	store->close();
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 5 + basic_offset);
+	// +1 for *-close-* predicate from above
+	TS_ASSERT_EQUALS(as->get_size(), 6 + basic_offset);
 
 	store->remove_atom(as, ha, true);
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	as->extract_atom(ha, true);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 2 + basic_offset);
+	// +1 for *-close-* predicate from above
+	TS_ASSERT_EQUALS(as->get_size(), 3 + basic_offset);
 
 	// --------------------------------------
 	// Do it again, but with a complex order.
@@ -220,17 +225,19 @@ void BasicDeleteUTest::test_recursive(void)
 
 	store->store_atom(lj);
 	store->barrier();
-	store->close();
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 5 + basic_offset);
+	// +1 for *-close-* predicate from above
+	TS_ASSERT_EQUALS(as->get_size(), 6 + basic_offset);
 
 	store->remove_atom(as, ha, true);
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	as->extract_atom(ha, true);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 2 + basic_offset);
+	// +1 for *-close-* predicate from above
+	TS_ASSERT_EQUALS(as->get_size(), 3 + basic_offset);
 
 	// --------------------------------------
 	// Do it again, but more deeply.
@@ -241,21 +248,23 @@ void BasicDeleteUTest::test_recursive(void)
 
 	store->store_atom(lk);
 	store->barrier();
-	store->close();
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 6 + basic_offset);
+	// +1 for *-close-* predicate from above
+	TS_ASSERT_EQUALS(as->get_size(), 7 + basic_offset);
 
 	store->remove_atom(as, ha, true);
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	as->extract_atom(ha, true);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	TS_ASSERT_EQUALS(as->get_size(), 2 + basic_offset);
+	// +1 for *-close-* predicate from above
+	TS_ASSERT_EQUALS(as->get_size(), 3 + basic_offset);
 
 	// --------------------------------------
 	::kill_data(store.get(), _test_asp.get());
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
@@ -272,7 +281,7 @@ void BasicDeleteUTest::test_key_deletion(void)
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Clear out left-over junk, just in case.
@@ -291,8 +300,8 @@ void BasicDeleteUTest::test_key_deletion(void)
 	store->store_atom(ha);
 	store->barrier();
 
-	// Verify the atomspace size (+1 for *-IsKeyFlag-*)
-	TS_ASSERT_EQUALS(as->get_size(), 6);
+	// Verify the atomspace size (+1 for *-IsKeyFlag-*, +1 for *-open-*)
+	TS_ASSERT_EQUALS(as->get_size(), 7);
 
 	// Verify that there are three keys
 	HandleSet hs = ha->getKeys();
@@ -304,14 +313,14 @@ void BasicDeleteUTest::test_key_deletion(void)
 	// AtomSpace will allow this.
 	store->remove_atom(as, kb);
 	as->extract_atom(kb);
-	// +1 for *-IsKeyFlag-*
-	TS_ASSERT_EQUALS(as->get_size(), 6);
+	// +1 for *-IsKeyFlag-*, +1 for *-open-*
+	TS_ASSERT_EQUALS(as->get_size(), 7);
 
 	// Verify the key was deleted by loading only PredicateNodes.
 	as = createAtomSpace();
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->fetch_all_atoms_of_type(PREDICATE_NODE);
 	store->barrier();
 
@@ -334,7 +343,7 @@ void BasicDeleteUTest::test_key_deletion(void)
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// We expect 5 atoms
@@ -360,7 +369,7 @@ void BasicDeleteUTest::test_key_deletion(void)
 	TS_ASSERT_EQUALS(hs.size(), 3);
 
 	::kill_data(store.get(), _test_asp.get());
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
@@ -382,7 +391,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Clear out left-over junk, just in case.
@@ -398,12 +407,12 @@ void BasicDeleteUTest::test_key_corruption(void)
 	store->store_atom(hb);
 	store->barrier();
 
-	TS_ASSERT_EQUALS(as->get_size(), 5);
+	TS_ASSERT_EQUALS(as->get_size(), 6);
 
 	// Remove the value
 	store->remove_atom(as, hx);
 	as->extract_atom(hx);
-	TS_ASSERT_EQUALS(as->get_size(), 4);
+	TS_ASSERT_EQUALS(as->get_size(), 5);
 
 	// FYI, we should call store->close() at this point, but we
 	// don't, because ... most users forget to do this too.
@@ -419,7 +428,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// We expect 5 atoms: b, x, key-x, *-IsKeyFlag-*, StorageNode
@@ -453,14 +462,14 @@ void BasicDeleteUTest::test_key_corruption(void)
 	store->remove_atom(as, hx);
 	as->extract_atom(hx);
 	TS_ASSERT_EQUALS(as->get_size(), 5 + full_offset);
-	store->close();
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	store->load_atomspace();
-	// Size is 6 because (Concept "x") cannot be deleted.
-	TS_ASSERT_EQUALS(as->get_size(), 6 + full_offset);
+	// Size is 6 because (Concept "x") cannot be deleted. +1 for *-close-*
+	TS_ASSERT_EQUALS(as->get_size(), 7 + full_offset);
 
 	// We are done.
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	// -------------------------------------------------------
 	// Start again, with a fresh connection.
@@ -471,7 +480,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 	hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// We expect 6 atoms
@@ -491,7 +500,7 @@ void BasicDeleteUTest::test_key_corruption(void)
 	TS_ASSERT_EQUALS(hs.size(), 2);
 
 	::kill_data(store.get(), _test_asp.get());
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	logger().debug("END TEST: %s", __FUNCTION__);
 }

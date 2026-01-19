@@ -38,6 +38,7 @@
 #include <opencog/persist/cog-storage/CogStorage.h>
 #include "../TestCogServer.h"
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 
 #include <opencog/util/Logger.h>
 
@@ -162,7 +163,7 @@ void MultiUserUTest::connect_to_db(int i)
     _as[i] = createAtomSpace();
     Handle hsn = _as[i]->add_node(COG_STORAGE_NODE, "cog://localhost:16007");
     _store[i] = StorageNodeCast(hsn);
-    _store[i]->open();
+    _store[i]->setValue(_as[i]->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(_store[i]->connected())
 }
 
@@ -439,7 +440,7 @@ void MultiUserUTest::run_user_test(int thread_id)
 	TSM_ASSERT("Took too long to connect", end - start < 10);
 
 	add_atoms(thread_id);
-	_store[thread_id]->close();
+	_store[thread_id]->setValue(_as[thread_id]->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	_as[thread_id] = nullptr;
 }
 
@@ -463,7 +464,7 @@ void MultiUserUTest::do_test_multiuser(void)
     AtomSpacePtr aspace = createAtomSpace();
     Handle hsn = aspace->add_node(COG_STORAGE_NODE, "cog://localhost:16007");
     StorageNodePtr store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(aspace->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(store->connected())
 
     for (int off=0; off<n_threads; off++)
@@ -473,7 +474,7 @@ void MultiUserUTest::do_test_multiuser(void)
         }
 
     store->barrier();
-    store->close();
+    store->setValue(aspace->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
     aspace = nullptr;
 }
 

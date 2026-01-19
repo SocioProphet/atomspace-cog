@@ -28,6 +28,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/persist/cog-simple/CogSimpleStorage.h>
 
 #include <opencog/util/Logger.h>
@@ -108,7 +109,7 @@ void ServerHangUTest::test_no_hang(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected());
 
 	printf("Triggering an exception (UniqueLink cannot be instantiated)...\n");

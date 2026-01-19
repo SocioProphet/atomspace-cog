@@ -32,6 +32,7 @@
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/persist/cog-simple/CogSimpleStorage.h>
 
 #include <opencog/util/Logger.h>
@@ -129,7 +130,7 @@ void AlphaEquivUTest::setup_data(void)
 
 	Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Populate the Storage with stuff that we will later query. */
@@ -157,7 +158,7 @@ void AlphaEquivUTest::test_fetch(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Fetch an alpha-equivalent lambda link.
@@ -203,7 +204,7 @@ void AlphaEquivUTest::test_remove(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Remove the alpha-equivalent lambda link.
@@ -241,7 +242,7 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Recursive remove Concept "A".

@@ -36,6 +36,7 @@
 #include <opencog/atoms/base/Node.h>
 #include <opencog/persist/cog-simple/CogSimpleStorage.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 
 #include <opencog/util/Logger.h>
 #include "../TestCogServer.h"
@@ -160,7 +161,7 @@ void MultiUserUTest::connect_to_db(int i)
     _as[i] = createAtomSpace();
     Handle hsn = _as[i]->add_node(COG_SIMPLE_STORAGE_NODE, "cog://localhost:16307");
     _store[i] = StorageNodeCast(hsn);
-    _store[i]->open();
+    _store[i]->setValue(_as[i]->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(_store[i]->connected())
 }
 
@@ -425,7 +426,7 @@ void MultiUserUTest::run_user_test(int thread_id)
 	while (n_threads != nstarted.fetch_add(0)) std::this_thread::yield();
 
 	add_atoms(thread_id);
-	_store[thread_id]->close();
+	_store[thread_id]->setValue(_as[thread_id]->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	_as[thread_id] = nullptr;
 }
 
@@ -449,7 +450,7 @@ void MultiUserUTest::do_test_multiuser(void)
     AtomSpacePtr aspace = createAtomSpace();
     Handle hsn = aspace->add_node(COG_SIMPLE_STORAGE_NODE, "cog://localhost:16307");
     StorageNodePtr store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(aspace->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(store->connected())
 
     for (int off=0; off<n_threads; off++)
@@ -459,7 +460,7 @@ void MultiUserUTest::do_test_multiuser(void)
         }
 
     store->barrier();
-    store->close();
+    store->setValue(aspace->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
     aspace = nullptr;
 }
 

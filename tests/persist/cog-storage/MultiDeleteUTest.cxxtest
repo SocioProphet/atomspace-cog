@@ -34,6 +34,7 @@
 #include <opencog/persist/cog-types/atom_types.h>
 #include <opencog/atoms/value/FloatValue.h>
 #include <opencog/atoms/value/LinkValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/atomspace/AtomSpace.h>
 
 #include "../TestCogServer.h"
@@ -152,7 +153,7 @@ void MultiDeleteUTest::test_add_delete(void)
 	Handle hsn = as->add_node(COG_STORAGE_NODE, std::string(uri));
 	store = StorageNodeCast(hsn);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Clear out left-over junk, just in case.
@@ -172,16 +173,16 @@ void MultiDeleteUTest::test_add_delete(void)
 	printf("Post-update AtomSpace size=%lu\n", as->get_size());
 	// printf("AtomSpace contents =\n%s\n", as->to_string().c_str());
 
-	// Verify the local AtomSpace size. Should be 34:
-	// The CogStrageNode itself, the (Concept "aaaa") and
-	// 16 from thread-id modulo 16
-	TS_ASSERT_EQUALS(as->get_size(), 2 + 2*(n_threads+6));
+	// Verify the local AtomSpace size. Should be 35:
+	// The CogStorageNode itself, the (Concept "aaaa") and
+	// 16 from thread-id modulo 16, plus *-open-* predicate
+	TS_ASSERT_EQUALS(as->get_size(), 3 + 2*(n_threads+6));
 
 	// Verify the remote AtomSpace: pull everything from the
 	// cogserver, back to here. Do this "independently", by
 	// closing the socket; this forces the cogserver through
 	// its socket-close code, potentially exposing bugs.
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
 	HandleSeq hs;
 	as->get_handles_by_type(hs, CONCEPT_NODE);
@@ -189,9 +190,10 @@ void MultiDeleteUTest::test_add_delete(void)
 		as->extract_atom(h, true);
 	hs.clear();
 	printf("AtomSpace contents =\n%s\n", as->to_string().c_str());
-	TS_ASSERT_EQUALS(as->get_size(), 1);
+	// CogStorageNode + *-close-* predicate + *-open-* predicate
+	TS_ASSERT_EQUALS(as->get_size(), 3);
 
-	store->open();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	store->load_atomspace();
@@ -200,11 +202,12 @@ void MultiDeleteUTest::test_add_delete(void)
 	// Size should be 20: the 18 from before plus that annoying
 	// (Predicate "*-TruthValueKey-*") And also *-IsKeyFlag-*
 	// And 9 more from CogServerNode gorp
+	// Plus *-open-* and *-close-* predicates
 	// Well, actually, there is no guarantee that the removes will
 	// happen after the stores. Best we can do is check lower and
-	// upper bounds of 20 and 36:
-	size_t min_size = 9 + 4 + n_threads + 6;
-	size_t max_size = 9 + 4 + 2*(n_threads + 6);
+	// upper bounds of 22 and 38:
+	size_t min_size = 9 + 4 + 2 + n_threads + 6;
+	size_t max_size = 9 + 4 + 2 + 2*(n_threads + 6);
 	if (as->get_size() < min_size or max_size < as->get_size())
 		printf("Error: Bad size! AtomSpace contents =\n%s\n",
 			as->to_string().c_str());
@@ -213,7 +216,7 @@ void MultiDeleteUTest::test_add_delete(void)
 	TS_ASSERT(as->get_size() <= max_size);
 
 	::kill_data(store.get(), _test_asp.get());
-	store->close();
+	store->setValue(as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	store = nullptr;
 
 	logger().debug("END TEST: %s", __FUNCTION__);

@@ -32,6 +32,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 
 #include <opencog/persist/cog-simple/CogSimpleStorage.h>
 
@@ -317,7 +318,7 @@ void PersistUTest::test_atomspace(void)
 
     Handle hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, "cog://localhost:16303");
     StorageNodePtr store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(store->connected())
 
     int idx = 0;
@@ -351,7 +352,7 @@ void PersistUTest::test_atomspace(void)
     /* The above clear wiped out the storage node; recreate it. */
     hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, "cog://localhost:16303");
     store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(store->connected())
 
     /* Verify that the atoms can still be fetched from storage. */
@@ -367,7 +368,7 @@ void PersistUTest::test_atomspace(void)
     /* The above clear wiped out the storage node; recreate it. */
     hsn = _as->add_node(COG_SIMPLE_STORAGE_NODE, "cog://localhost:16303");
     store = StorageNodeCast(hsn);
-    store->open();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
     TS_ASSERT(store->connected())
 
     /* Verify that the atoms can still be fetched from storage. */
@@ -376,7 +377,7 @@ void PersistUTest::test_atomspace(void)
         check_space(i, _as, "ver-again");
     }
 
-    store->close();
+    store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 
     /* Kill data for good */
     _as->clear();

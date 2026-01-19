@@ -32,6 +32,7 @@
 #include <opencog/atoms/base/Link.h>
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/persist/cog-storage/CogStorage.h>
 #include "../TestCogServer.h"
 
@@ -292,7 +293,7 @@ void LargeZipfUTest::test_atomspace(void)
 
 	Handle hsn = _as->add_node(COG_STORAGE_NODE, "cog://localhost:16009");
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Create a large number of atoms */
@@ -315,7 +316,7 @@ void LargeZipfUTest::test_atomspace(void)
 	/* The clear above nuked the storage, so restart */
 	hsn = _as->add_node(COG_STORAGE_NODE, "cog://localhost:16009");
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Verify that the atoms can still be fetched from storage. */
@@ -330,7 +331,7 @@ void LargeZipfUTest::test_atomspace(void)
 	/* The clear above nuked the storage, so restart */
 	hsn = _as->add_node(COG_STORAGE_NODE, "cog://localhost:16009");
 	store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Verify that the atoms can still be fetched from storage. */
@@ -345,7 +346,7 @@ void LargeZipfUTest::test_atomspace(void)
 	/* Verify that the atoms are no longer being found. */
 	check_empty(_as);
 
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	logger().debug("END TEST: %s", __FUNCTION__);
 }
 

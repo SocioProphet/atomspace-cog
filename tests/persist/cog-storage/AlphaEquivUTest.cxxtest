@@ -32,6 +32,7 @@
 #include <opencog/atoms/base/Node.h>
 #include <opencog/atomspace/AtomSpace.h>
 #include <opencog/atoms/value/FloatValue.h>
+#include <opencog/atoms/value/VoidValue.h>
 #include <opencog/persist/cog-storage/CogStorage.h>
 #include "../TestCogServer.h"
 
@@ -129,7 +130,7 @@ void AlphaEquivUTest::setup_data(void)
 
 	Handle hsn = _as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	/* Populate the Storage with stuff that we will later query. */
@@ -141,7 +142,7 @@ void AlphaEquivUTest::setup_data(void)
 	/* Push all atoms out to the database */
 	store->store_atomspace();
 	store->barrier();
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 }
 
 // ============================================================
@@ -156,7 +157,7 @@ void AlphaEquivUTest::test_fetch(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Fetch an alpha-equivalent lambda link.
@@ -185,7 +186,7 @@ void AlphaEquivUTest::test_fetch(void)
 	FloatValuePtr fup = FloatValueCast(fu);
 	TSM_ASSERT_EQUALS("Expecting three floats", fup->size(), 3);
 
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
@@ -201,7 +202,7 @@ void AlphaEquivUTest::test_remove(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Remove the alpha-equivalent lambda link.
@@ -222,7 +223,7 @@ void AlphaEquivUTest::test_remove(void)
 	ValuePtr fu = lx->getValue(an(PREDICATE, "foo"));
 	TSM_ASSERT("Expecting null value", nullptr == fu);
 
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
@@ -238,7 +239,7 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	_as = createAtomSpace();
 	Handle hsn = _as->add_node(COG_STORAGE_NODE, std::string(uri));
 	StorageNodePtr store = StorageNodeCast(hsn);
-	store->open();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-open-*"), createVoidValue());
 	TS_ASSERT(store->connected())
 
 	// Recursive remove Concept "A".
@@ -258,7 +259,7 @@ void AlphaEquivUTest::test_recursive_remove(void)
 	ValuePtr fu = lx->getValue(an(PREDICATE, "foo"));
 	TSM_ASSERT("Expecting null value", nullptr == fu);
 
-	store->close();
+	store->setValue(_as->add_node(PREDICATE_NODE, "*-close-*"), createVoidValue());
 	logger().info("END TEST: %s", __FUNCTION__);
 }
 
